@@ -1,4 +1,4 @@
+.cache/
 bin/
 build/
-.cache/
 include/SDL2/
