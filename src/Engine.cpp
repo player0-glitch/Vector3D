@@ -1,8 +1,10 @@
 #include "Engine.h"
 #include <Renderer.h>
 #include <cmath>
-#include <ostream>
+#include <print>
 #include <v3Util.h>
+
+using std::println;
 
 // should only be globals here
 inline Triangle triangleProj, triangleTranslated;
@@ -11,15 +13,14 @@ Engine::Engine() {
   // projection matrix
   // initialise everthing to zero first
   initProjectionMatrix(_projectionMatrix);
-  cout << _projectionMatrix;
   /*Matrix4(_matProj);*/
   initRotMatX(_rotationMatrix_x, 45.0f);
-  cout << "Rotation on the x-axis\n" << _rotationMatrix_x;
 
   initRotMatZ(_rotationMatrix_z, 45.0f);
-  cout << "Rotation on the z-axis\n" << _rotationMatrix_z;
-  createCube();
+  // createCube();
   CCW_cube();
+  std::println("Theta Z -->{}", f_theta_z);
+  std::println("Theta X -->{}", f_theta_x);
 }
 void Engine::initProjectionMatrix(Matrix4x4 &mat) {
   mat.m[0][0] = 1.0f / (_fAspectRatio * tan(_fFOVRad));
@@ -27,6 +28,37 @@ void Engine::initProjectionMatrix(Matrix4x4 &mat) {
   mat.m[2][2] = -(_fFar + _fNear) / (_fFar - _fNear);
   mat.m[3][2] = -1.0f;
   mat.m[2][3] = -(2 * _fFar * _fNear) / (_fFar - _fNear);
+}
+void Engine::resetCCW_cube() {
+  _CCW_cube.tris = {
+      // Front Face
+      Triangle(V3D(), V3D(1, 0, 0), V3D(1, 1, 0)),
+      Triangle(V3D(1, 1, 0), V3D(0, 1, 0), V3D()),
+      // Right Face
+      Triangle(V3D(1.0f, 0.0f, 0.0f), V3D(1.0f, 0.0f, 1.0f),
+               V3D(1.0f, 1.0f, 1.0f)),
+      Triangle(V3D(1.0f, 1.0f, 1.0f), V3D(1.0f, 1.0f, 0.0f),
+               V3D(1.0f, 0.0f, 0.0f)),
+      // Back Face
+      Triangle(V3D(1.0f, 0.0f, 1.0f), V3D(0.0f, 0.0f, 1.0f),
+               V3D(0.0f, 1.0f, 1.0f)),
+      Triangle(V3D(0.0f, 1.0f, 1.0f), V3D(1.0f, 1.0f, 1.0f),
+               V3D(1.0f, 0.0f, 1.0f)),
+      // Left Face
+      Triangle(V3D(0.0f, 0.0f, 1.0f), V3D(), V3D(0.0f, 1.0f, 0.0f)),
+      Triangle(V3D(0.0f, 1.0f, 0.0f), V3D(0.0f, 1.0f, 1.0f),
+               V3D(0.0f, 0.0f, 1.0f)),
+      // Top Face
+      Triangle(V3D(0.0f, 1.0f, 0.0f), V3D(1.0f, 1.0f, 0.0f),
+               V3D(1.0f, 1.0f, 1.0f)),
+      Triangle(V3D(1.0f, 1.0f, 1.0f), V3D(0.0f, 1.0f, 1.0f),
+               V3D(0.0f, 1.0f, 0.0f)),
+      // Bottom Face
+      Triangle(V3D(), V3D(1.0f, 0.0f, 0.0f), V3D(1.0f, 0.0f, 1.0f)),
+      Triangle(V3D(1.0f, 0.0f, 1.0f), V3D(0.0f, 0.0f, 1.0f), V3D())
+
+  };
+  ;
 }
 void Engine::CCW_cube() {
   _CCW_cube.tris = {
@@ -101,10 +133,6 @@ void Engine::multiplyMatrixVector(const V3D &in, V3D &out,
 
   // Avoids doing any calculations where there are any 0s in the perspective
   // projection matrix
-  /*out.x = in.x * matrix.m[0][0];*/
-  /*out.y = in.y * matrix.m[1][1];*/
-  /*out.z = (in.z * matrix.m[2][2]) + (matrix.m[3][2] * in.w);*/
-  /*V3D Out;*/
   out.x = (in.x * matrix.m[0][0]) + (in.y * matrix.m[1][0]) +
           (in.z * matrix.m[2][0]) + (1 * matrix.m[3][0]);
 
@@ -124,27 +152,45 @@ void Engine::multiplyMatrixVector(const V3D &in, V3D &out,
   }
   /*return out;*/
 }
-void Engine::update(Renderer &renderer, float total_rot_x, float total_rot_z) {
-  std::cout << __FUNCTION__ << " Line " << __LINE__
-            << ": Elapsed Time= " << f_elapsed_time << "\n";
-  for (auto &t : _CCW_cube.tris) {
+void Engine::update(Renderer &render, float total_rot_x, float total_rot_z) {
 
+  // updating X axis rotation speed
+  total_rotations += f_theta_x * total_rot_x;
+  // Consider wrap around
+  // total_rotations = std::fmod(total_rotations, 2 * M_PI);
+  // if (total_rotations < 0) {
+  //   total_rotations += M_PI * 2.0f; // ensure positive angle
+  // }
+
+  // updating Z axis rotation speed
+  total_rotations_z += f_theta_z * total_rot_z;
+  // Consider wrap around
+  // total_rotations_z = std::fmod(total_rotations_z, 2 * M_PI);
+  // if (total_rotations_z < 0) {
+  //   total_rotations_z += M_PI * 2.0f; // ensure positive angle
+  // }
+  for (auto &t : _CCW_cube.tris) {
     // rotate the points around the z-axis
-    multiplyMatrixVector(t.p1, triangleRot_Z.p1, getRotZ(f_elapsed_time));
-    multiplyMatrixVector(t.p2, triangleRot_Z.p2, getRotZ(f_elapsed_time));
-    multiplyMatrixVector(t.p3, triangleRot_Z.p3, getRotZ(f_elapsed_time));
+
+    multiplyMatrixVector(t.p1, triangleRot_Z.p1, getRotZ(total_rotations_z));
+
+    multiplyMatrixVector(t.p2, triangleRot_Z.p2, getRotZ(total_rotations_z));
+
+    multiplyMatrixVector(t.p3, triangleRot_Z.p3, getRotZ(total_rotations_z));
 
     // rotate the points around the x-axis
     multiplyMatrixVector(triangleRot_Z.p1, triangleRot_ZX.p1,
-                         getRotX(f_elapsed_time));
+                         getRotX(total_rotations));
+    //
     multiplyMatrixVector(triangleRot_Z.p2, triangleRot_ZX.p2,
-                         getRotX(f_elapsed_time));
+                         getRotX(total_rotations));
+    //
     multiplyMatrixVector(triangleRot_Z.p3, triangleRot_ZX.p3,
-                         getRotX(f_elapsed_time));
-    // translate the 'transformed' points further into the z-axis
-    triangleTranslated = triangleRot_ZX;
+                         getRotX(total_rotations));
 
-    // should be adjustable in im gui
+    // // translate the 'transformed' points further into the z-axis
+    triangleTranslated = triangleRot_ZX;
+    //
     triangleTranslated.p1.z += _distance_from_camera;
     triangleTranslated.p2.z += _distance_from_camera;
     triangleTranslated.p3.z += _distance_from_camera;
@@ -158,17 +204,17 @@ void Engine::update(Renderer &renderer, float total_rot_x, float total_rot_z) {
 
     // scale to the points to our viewport
     scaleToView(triangleProj);
-    renderer.drawSquare(triangleProj);
-    /*SDL_RenderPresent(renderer.getRender());*/
+
+    t = triangleProj;
   }
 }
 
 Mesh Engine::getMeshCube() { return _meshCube; }
+
 Matrix4x4 Engine::getProjectionMatrix4x4() { return _projectionMatrix; }
 
 void Engine::scaleToView(Triangle &shape) {
   // Scale the projected vector result from [-1,1] to [0,2]
-
   shape.p1.x += 1.0f;
   shape.p1.y += 1.0f;
   shape.p2.x += 1.0f;
@@ -220,7 +266,6 @@ V3D Engine::calculateNormal(const Triangle &tri) {
 
 void Engine::initRotMatX(Matrix4x4 &matX, float angle_deg) {
   // convert angle in degrees to rad
-  /*f_theta_x = (f_theta_x * M_PI) / 180.0f;*/
   /*f_theta += 1.0f * f_elapsed_time;*/
   matX.m[0][0] = 1;
   matX.m[1][1] = cos(f_theta_x);
@@ -244,28 +289,27 @@ void Engine::initRotMatZ(Matrix4x4 &matZ, float angle_deg) {
 
 Matrix4x4 Engine::getRotX(float elapsed_time) {
 
-  /*f_theta = (f_theta * M_PI) / 180.0f;*/
-  /*f_theta_x = ((0.0f * M_PI) / 180.0f) * elapsed_time;*/
-  f_theta_x += elapsed_time;
+  // total_rotations += f_theta_x * elapsed_time;
+
   _rotationMatrix_x.m[0][0] = 1;
-  _rotationMatrix_x.m[1][1] = cos(f_theta_x);
-  _rotationMatrix_x.m[1][2] = -sin(f_theta_x);
-  _rotationMatrix_x.m[2][1] = sin(f_theta_x);
-  _rotationMatrix_x.m[2][2] = cos(f_theta_x);
+  _rotationMatrix_x.m[1][1] = cos(elapsed_time);
+  _rotationMatrix_x.m[1][2] = -sin(elapsed_time);
+  _rotationMatrix_x.m[2][1] = sin(elapsed_time);
+  _rotationMatrix_x.m[2][2] = cos(elapsed_time);
+  _rotationMatrix_x.m[3][3] = 1;
+
   return _rotationMatrix_x;
 }
 
 Matrix4x4 Engine::getRotZ(float elapsed_time) {
-  /*f_theta = (f_theta * M_PI) / 180.0f;*/
-  f_theta_z += elapsed_time;
+
   // Take angle of rotation * delta to get new angle in radian
-  //
-  //
-  /*f_theta_z = ((90.0f * M_PI) / 180.0f) * elapsed_time;*/
-  _rotationMatrix_z.m[0][0] = cos(f_theta_z * 0.5f);
-  _rotationMatrix_z.m[0][1] = -sin(f_theta_z * 0.5f);
-  _rotationMatrix_z.m[1][0] = sin(f_theta_z * 0.5f);
-  _rotationMatrix_z.m[1][1] = cos(f_theta_z * 0.5f);
+  // total_rotations_z += f_theta_z * elapsed_time;
+
+  _rotationMatrix_z.m[0][0] = cos(elapsed_time * 0.5f);
+  _rotationMatrix_z.m[0][1] = -sin(elapsed_time * 0.5f);
+  _rotationMatrix_z.m[1][0] = sin(elapsed_time * 0.5f);
+  _rotationMatrix_z.m[1][1] = cos(elapsed_time * 0.5f);
   _rotationMatrix_z.m[2][2] = 1;
   _rotationMatrix_z.m[3][3] = 1;
 
