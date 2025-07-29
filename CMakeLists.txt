@@ -15,7 +15,7 @@ file(GLOB SOURCES ${CMAKE_SOURCE_DIR}/src/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 #Setting compile flags 
-target_compile_options(${PROJECT_NAME} PRIVATE -Wall -std=c++23 -g -O0) #just to make sure compile with c++ 20
+target_compile_options(${PROJECT_NAME} PUBLIC -Wall -std=c++23 -g -O0) #just to make sure compile with c++ 20
 
 #setting up SDL2 
 find_package(SDL2 REQUIRED)
