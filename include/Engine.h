@@ -3,7 +3,6 @@
 
 #include "Renderer.h"
 #include "v3Util.h"
-#include <cmath>
 
 using std::cout, std::endl;
 inline const int FRAME_DELAY =
@@ -20,7 +19,7 @@ public:
   // Nor copyable
   Engine(const Engine &) = delete;
 
-  void update(Renderer &renderer, float total_rot_x, float total_rot_z);
+  void update(Renderer &render, float total_rot_x, float total_rot_z);
   void createCube();
   void multiplyMatrixVector(const V3D &in, V3D &out, const Matrix4x4 &matrix);
   void scaleToView(Triangle &shape);
@@ -35,6 +34,8 @@ public:
   Mesh getCCWCube() const { return _CCW_cube; }
   V3D getSurfaceNormal(const Triangle &t);
   /*Mesh getCubeToDraw() const { return _mesh_to_draw; }*/
+  void resetCCW_cube();
+  double getTargetFrameRate() const { return 1 / 60.0f; }
 
 private:
   void test(V3D &in);
@@ -44,11 +45,11 @@ private:
   void initRotMatZ(Matrix4x4 &matZ, float angle_deg);
   void Matrix4(Matrix4x4 &mat);
   void CCW_cube();
-  // for now i'll only make a cube
-  /*const float degToRad = acos(-1.0f) / 180;*/
-  float f_elapsed_time = 1.0f / 60.0f;
-  float f_theta_z = (90.0f * M_PI) / 180.0f; // radians
-  float f_theta_x = (45.0f * M_PI) / 180.0f; // radians
+  float total_rotations = 0.0f;
+  float total_rotations_z = 0.0f;
+  float f_elapsed_time = 1.0f / 15.0f;
+  float f_theta_z = 45.0f * (M_PI / 180.0f); // radians
+  float f_theta_x = 90.0f * (M_PI / 180.0f); // radians
   Mesh _meshCube;
   Mesh _CCW_cube;
   float _fNear = 0.1f;
@@ -57,9 +58,6 @@ private:
   float _fFOV_degrees = 45.0f;
   float _fAspectRatio = (VIEWPORT_WIDTH / VIEWPORT_HEIGHT);
   float _fFOVRad = (_fFOV_degrees * M_PI) / 180.0f;
-  /*float _fFOVRad =*/
-  /*    1.0f / tanf((_fFOV * 0.5f) /*/
-  /*                (180 * M_PI)); // converting FOV from degrees to radians*/
   V3D _surfaceNormal;
   Matrix4x4 _projectionMatrix = {0};
   Matrix4x4 _matProj = {0};
