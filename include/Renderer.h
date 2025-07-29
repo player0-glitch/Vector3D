@@ -2,10 +2,10 @@
 #define RENDERER_H
 // This renderer is very bare bones and does
 // only the bare minimum needed to render vectors and matrices on a plot system
-#include "SDL2/SDL_render.h"
-#include "SDL2/SDL_video.h"
 #include "v3Util.h"
-#include <cxxabi.h>
+#include <SDL2/SDL_render.h>
+#include <SDL2/SDL_video.h>
+
 extern const int WINDOW_WIDTH, WINDOW_HEIGHT;
 extern const float VIEWPORT_WIDTH, VIEWPORT_HEIGHT;
 
