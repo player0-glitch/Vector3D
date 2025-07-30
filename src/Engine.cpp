@@ -152,7 +152,7 @@ void Engine::multiplyMatrixVector(const V3D &in, V3D &out,
   }
   /*return out;*/
 }
-void Engine::update(Renderer &render, float total_rot_x, float total_rot_z) {
+void Engine::update(float total_rot_x, float total_rot_z) {
 
   // updating X axis rotation speed
   total_rotations += f_theta_x * total_rot_x;
@@ -161,7 +161,6 @@ void Engine::update(Renderer &render, float total_rot_x, float total_rot_z) {
   // if (total_rotations < 0) {
   //   total_rotations += M_PI * 2.0f; // ensure positive angle
   // }
-
   // updating Z axis rotation speed
   total_rotations_z += f_theta_z * total_rot_z;
   // Consider wrap around

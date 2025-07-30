@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
     }
 
     //**********do the updating and calculations*****
-    engine.update(render, dT, dT);
+    engine.update(dT, dT);
 
     //***************Do the rendering ***************
     // Clear the previous frame

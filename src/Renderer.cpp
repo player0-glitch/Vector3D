@@ -34,12 +34,17 @@ void Renderer::draw(const Mesh &shape) {
 
   for (const Triangle &tri : shape.tris) {
 
-    SDL_SetRenderDrawColor(_renderer, 255, 255, 255, 255);
-
-    // Draw the triangle
+    // P1->P2 : Red
+    SDL_SetRenderDrawColor(_renderer, 255, 0, 0, 255);
     SDL_RenderDrawLine(_renderer, tri.p1.x, tri.p1.y, tri.p2.x, tri.p2.y);
+
+    // P2->P3 : Green
+    SDL_SetRenderDrawColor(_renderer, 0, 255, 0, 255);
     SDL_RenderDrawLine(_renderer, tri.p2.x, tri.p2.y, tri.p3.x, tri.p3.y);
-    // SDL_RenderDrawLine(_renderer, point3.x, point3.y, point1.x, point1.y);
+
+    // P3->P1 : Blue
+    // SDL_SetRenderDrawColor(_renderer, 0, 0, 255, 255);
+    // SDL_RenderDrawLine(_renderer, tri.p3.x, tri.p3.y, tri.p1.x, tri.p1.y);
   }
   SDL_RenderPresent(_renderer);
 }
