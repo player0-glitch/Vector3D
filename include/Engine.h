@@ -19,7 +19,7 @@ public:
   // Nor copyable
   Engine(const Engine &) = delete;
 
-  void update(Renderer &render, float total_rot_x, float total_rot_z);
+  void update(float total_rot_x, float total_rot_z);
   void createCube();
   void multiplyMatrixVector(const V3D &in, V3D &out, const Matrix4x4 &matrix);
   void scaleToView(Triangle &shape);
