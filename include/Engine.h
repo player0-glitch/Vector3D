@@ -45,11 +45,11 @@ private:
   void initRotMatZ(Matrix4x4 &matZ, float angle_deg);
   void Matrix4(Matrix4x4 &mat);
   void CCW_cube();
-  float total_rotations = 0.0f;
+  float total_rotations_x = 0.0f;
   float total_rotations_z = 0.0f;
   float f_elapsed_time = 1.0f / 15.0f;
-  float f_theta_z = 45.0f * (M_PI / 180.0f); // radians
-  float f_theta_x = 90.0f * (M_PI / 180.0f); // radians
+  float f_theta_x = 0.0f; // set to 90
+  float f_theta_z = 0.0f; // set to 45
   Mesh _meshCube;
   Mesh _CCW_cube;
   float _fNear = 0.1f;

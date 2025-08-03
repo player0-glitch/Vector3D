@@ -14,7 +14,7 @@ Engine::Engine() {
   // initialise everthing to zero first
   initProjectionMatrix(_projectionMatrix);
   /*Matrix4(_matProj);*/
-  initRotMatX(_rotationMatrix_x, 45.0f);
+  initRotMatX(_rotationMatrix_x, 90.0f);
 
   initRotMatZ(_rotationMatrix_z, 45.0f);
   // createCube();
@@ -155,37 +155,23 @@ void Engine::multiplyMatrixVector(const V3D &in, V3D &out,
 void Engine::update(float total_rot_x, float total_rot_z) {
 
   // updating X axis rotation speed
-  total_rotations += f_theta_x * total_rot_x;
-  // Consider wrap around
-  // total_rotations = std::fmod(total_rotations, 2 * M_PI);
-  // if (total_rotations < 0) {
-  //   total_rotations += M_PI * 2.0f; // ensure positive angle
-  // }
+  total_rotations_x += f_theta_x * total_rot_x;
   // updating Z axis rotation speed
   total_rotations_z += f_theta_z * total_rot_z;
-  // Consider wrap around
-  // total_rotations_z = std::fmod(total_rotations_z, 2 * M_PI);
-  // if (total_rotations_z < 0) {
-  //   total_rotations_z += M_PI * 2.0f; // ensure positive angle
-  // }
   for (auto &t : _CCW_cube.tris) {
     // rotate the points around the z-axis
 
     multiplyMatrixVector(t.p1, triangleRot_Z.p1, getRotZ(total_rotations_z));
-
     multiplyMatrixVector(t.p2, triangleRot_Z.p2, getRotZ(total_rotations_z));
-
     multiplyMatrixVector(t.p3, triangleRot_Z.p3, getRotZ(total_rotations_z));
 
     // rotate the points around the x-axis
     multiplyMatrixVector(triangleRot_Z.p1, triangleRot_ZX.p1,
-                         getRotX(total_rotations));
-    //
+                         getRotX(total_rotations_x));
     multiplyMatrixVector(triangleRot_Z.p2, triangleRot_ZX.p2,
-                         getRotX(total_rotations));
-    //
+                         getRotX(total_rotations_x));
     multiplyMatrixVector(triangleRot_Z.p3, triangleRot_ZX.p3,
-                         getRotX(total_rotations));
+                         getRotX(total_rotations_x));
 
     // // translate the 'transformed' points further into the z-axis
     triangleTranslated = triangleRot_ZX;
@@ -204,7 +190,8 @@ void Engine::update(float total_rot_x, float total_rot_z) {
     // scale to the points to our viewport
     scaleToView(triangleProj);
 
-    t = triangleProj;
+    t = triangleProj; // the projected triangle will be delivered to the
+                      // renderer
   }
 }
 
@@ -234,13 +221,13 @@ void Engine::scaleToView(Triangle &shape) {
 
 // Im testing something here
 void Engine::Matrix4(Matrix4x4 &mat) {
-  // fov in degrees
+  // fov in degrees (from 45 deg)
   float fov_rad = 45 * (M_PI / 180.0f);
   float focal = 1.0f / std::tan(fov_rad / 2.0f);
   float far = _fFar, near = _fNear;
 
   _matProj.m[0][0] = focal / (_fAspectRatio);
-  _matProj.m[1][1] = focal; // 1/tan(angle_in_rad)
+  _matProj.m[1][1] = focal;
   _matProj.m[2][2] = (far + near) / (near - far);
   _matProj.m[3][2] = -1.0f;
   _matProj.m[2][3] = (2 * far * near) / (near - far);
@@ -265,6 +252,7 @@ V3D Engine::calculateNormal(const Triangle &tri) {
 
 void Engine::initRotMatX(Matrix4x4 &matX, float angle_deg) {
   // convert angle in degrees to rad
+  f_theta_x = angle_deg * (M_PI / 180.0f); // radians
   /*f_theta += 1.0f * f_elapsed_time;*/
   matX.m[0][0] = 1;
   matX.m[1][1] = cos(f_theta_x);
@@ -274,9 +262,8 @@ void Engine::initRotMatX(Matrix4x4 &matX, float angle_deg) {
   matX.m[3][3] = 1;
 }
 void Engine::initRotMatZ(Matrix4x4 &matZ, float angle_deg) {
-  // convert angle in degrees to rad
-  /*f_theta_z = (f_theta_z * M_PI) / 180.0f;*/
 
+  f_theta_z = angle_deg * (M_PI / 180.0f); // radians
   // need a different rotation 'speed' to avoid gymbal lock
   matZ.m[0][0] = cos(f_theta_z);
   matZ.m[0][1] = -sin(f_theta_z);
@@ -287,8 +274,6 @@ void Engine::initRotMatZ(Matrix4x4 &matZ, float angle_deg) {
 }
 
 Matrix4x4 Engine::getRotX(float elapsed_time) {
-
-  // total_rotations += f_theta_x * elapsed_time;
 
   _rotationMatrix_x.m[0][0] = 1;
   _rotationMatrix_x.m[1][1] = cos(elapsed_time);
@@ -301,9 +286,6 @@ Matrix4x4 Engine::getRotX(float elapsed_time) {
 }
 
 Matrix4x4 Engine::getRotZ(float elapsed_time) {
-
-  // Take angle of rotation * delta to get new angle in radian
-  // total_rotations_z += f_theta_z * elapsed_time;
 
   _rotationMatrix_z.m[0][0] = cos(elapsed_time * 0.5f);
   _rotationMatrix_z.m[0][1] = -sin(elapsed_time * 0.5f);

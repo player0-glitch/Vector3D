@@ -6,6 +6,7 @@
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_timer.h>
 #include <iostream>
+#include <print>
 
 int main(int argc, char *argv[]) {
   // Initialise SDL
@@ -48,7 +49,7 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    //**********do the updating and calculations*****
+    //**********Do the updating and calculations*****
     engine.update(dT, dT);
 
     //***************Do the rendering ***************
